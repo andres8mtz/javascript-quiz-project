@@ -61,62 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let timer;
 
-  constructor(initialTime) {
-    this.timeRemaining = initialTime; // e.g., 60 for a 60-second countdown
-}
-
-// Call this when quiz starts
-startTimer() {
-    // Clear any existing timer
-    if (this.timer) {
-        clearInterval(this.timer);
-    }
-
-    // Set the timer and update the UI
-    this.timer = setInterval(() => {
-        this.timeRemaining -= 1; // Decrement time
-
-        // Update the timer UI
-        this.updateTimerUI();
-
-        if (this.timeRemaining <= 0) {
-            this.endQuiz();
-        }
-    }, 1000); // 1 second interval
-}
-
-// Call this to stop the timer
-endTimer() {
-    clearInterval(this.timer);
-}
-
-// Call this when the quiz ends
-endQuiz() {
-    this.endTimer();
-    // Display results etc.
-    this.showResults();
-}
-
-// Call this to reset when restarting the quiz
-restartQuiz(initialTime) {
-    this.timeRemaining = initialTime; // Reset to initial time
-    this.updateTimerUI();
-    this.startTimer();
-}
-
-// Method to update timer UI
-updateTimerUI() {
-    const timerElement = document.getElementById('timer'); // Adjust selector as needed
-    timerElement.textContent = this.formatTime(this.timeRemaining);
-}
-
-// Method for formatting time
-formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`; // Format as mm:ss
-}
-
   /************  EVENT LISTENERS  ************/
 
   nextButton.addEventListener("click", nextButtonHandler);
@@ -218,33 +162,26 @@ formatTime(seconds) {
     // YOUR CODE HERE:
     //
     // 1. Get all the choice elements. You can use the `document.querySelectorAll()` method.
-  const allChoices = document.querySelectorAll('choices')
+    const choiceElements = document.querySelectorAll('input[name="choice"]');
 
     // 2. Loop through all the choice elements and check which one is selected
       // Hint: Radio input elements have a property `.checked` (e.g., `element.checked`).
       //  When a radio input gets selected the `.checked` property will be set to true.
       //  You can use check which choice was selected by checking if the `.checked` property is true.
-    for (let choice of allChoices) {
-      if (choice.checked) {
-        selectedAnswer = answer.value;
-         break;
+      choiceElements.forEach(element => {
+        if (element.checked) {
+            selectedAnswer = element.value;
         }
-    }
-    
+    });
       
     // 3. If an answer is selected (`selectedAnswer`), check if it is correct and move to the next question
       // Check if selected answer is correct by calling the quiz method `checkAnswer()` with the selected answer.
       // Move to the next question by calling the quiz method `moveToNextQuestion()`.
       // Show the next question by calling the function `showQuestion()`.
-      if (selectedAnswer !== null) {
-        // Check if the selected answer is correct
-      quiz.checkAnswer(selectedAnswer);
-        
-        // Move to the next question
-      quiz.moveToNextQuestion();
-        
-        // Show the next question
-      showQuestion();
+      if (selectedAnswer) {
+        quiz.checkAnswer(selectedAnswer);
+        quiz.moveToNextQuestion();
+        showQuestion();
     }
   }  
 
@@ -263,6 +200,33 @@ formatTime(seconds) {
     
     // 3. Update the result container (div#result) inner text to show the number of correct answers out of total questions
     resultContainer.innerText = `You scored ${quiz.correctAnswers} out of ${quiz.questions.length} correct answers!`; // This value is hardcoded as a placeholder
+
+    clearInterval(timer);
+
   }
+
+  function restartQuizHandler() {
+    // Hide end view
+    document.getElementById('end-view').classList.add('hidden');
+
+    // Show quiz view
+    document.getElementById('quiz-view').classList.remove('hidden');
+
+    // Reset quiz
+    quiz.currentQuestionIndex = 0;
+    quiz.score = 0;
+
+    // Shuffle questions
+    quiz.questions.forEach(question => question.shuffleChoices());
+
+    // Show first question
+    showQuestion();
+
+    // Restart timer
+    quiz.startTimer();
+}
+
+// Add event listener for restart button
+document.getElementById('restart-quiz-btn').addEventListener('click', restartQuizHandler);
   
 });
